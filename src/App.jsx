@@ -1,46 +1,32 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useHandLandmarker } from './hooks/useHandLandmarker';
-import ImageViewer from './components/ImageViewer';
-import CameraOverlay from './components/CameraOverlay';
+/**
+ * 应用根组件 — 路由配置
+ *
+ * 路由表：
+ *   /         → ImageGallery  图片浏览 + 手势控制
+ *   /light    → FingerLight   指尖追踪 + 光晕效果
+ */
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import ImageGallery from './pages/ImageGallery';
+import FingerLight from './pages/FingerLight';
 
-const IMAGES = [
-  '20260428-182932.jpg',
-  '20260428-182936.jpg',
-  '20260428-182940.jpg',
-];
-
-const MIN_R = 0.15;
-const MAX_R = 0.8;
-
-function App() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [zoom, setZoom] = useState(1);
-
-  const handleGesture = useCallback((gesture) => {
-    if (gesture.name === '比耶') {
-      if (gesture.direction === 'right') {
-        setCurrentIndex(i => Math.min(i + 1, IMAGES.length - 1));
-      } else {
-        setCurrentIndex(i => Math.max(i - 1, 0));
-      }
-    }
-  }, []);
-
-  const { videoRef, landmarks, gestureName, pinchRatio } = useHandLandmarker({ onGesture: handleGesture });
-
-  useEffect(() => {
-    if (pinchRatio === null) return;
-    const t = Math.max(0, Math.min(1, (pinchRatio - MIN_R) / (MAX_R - MIN_R)));
-    setZoom(1 + t * 4);
-  }, [pinchRatio]);
-
+/** 顶部导航栏，用于切换功能页面 */
+function Nav() {
   return (
-    <div className="app">
-      <video ref={videoRef} autoPlay muted playsInline className="hidden-video" />
-      <ImageViewer currentIndex={currentIndex} zoom={zoom} images={IMAGES} onSelectIndex={setCurrentIndex} />
-      <CameraOverlay videoRef={videoRef} landmarks={landmarks} gestureName={gestureName} />
-    </div>
+    <nav className="page-nav">
+      <Link to="/">图片浏览</Link>
+      <Link to="/light">指尖光晕</Link>
+    </nav>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Nav />
+      <Routes>
+        <Route path="/" element={<ImageGallery />} />
+        <Route path="/light" element={<FingerLight />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}

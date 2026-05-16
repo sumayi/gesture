@@ -1,10 +1,47 @@
+/* =============================================
+   全局样式重置
+   ============================================= */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { overflow: hidden; background: #000; width: 100vw; height: 100vh; }
 
-.app { width: 100vw; height: 100vh; position: relative; }
+/* =============================================
+   顶部导航栏
+   ============================================= */
+.page-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 2px;
+  padding: 10px 16px;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);   /* 毛玻璃效果 */
+  z-index: 100;
+}
 
+.page-nav a {
+  color: rgba(255,255,255,0.5);
+  text-decoration: none;
+  font-size: 14px;
+  font-family: system-ui, sans-serif;
+  padding: 4px 14px;
+  border-radius: 6px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.page-nav a:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.page-nav a.active { color: #fff; background: rgba(255,255,255,0.12); }
+
+/* =============================================
+   图片浏览页面
+   ============================================= */
+.app { width: 100vw; height: 100vh; position: relative; padding-top: 42px; }
+
+/* 隐藏的 <video> 标签，仅作为 MediaPipe 输入源 */
 .hidden-video { display: none; }
 
+/* 图片查看器容器 */
 .image-viewer {
   width: 100%;
   height: 100%;
@@ -12,18 +49,21 @@ body { overflow: hidden; background: #000; width: 100vw; height: 100vh; }
   position: relative;
 }
 
+/* ---- 轮播系统 ---- */
 .slide-viewport {
   width: 100%;
   height: 100%;
   overflow: hidden;
 }
 
+/* 横向图片轨道，通过 translateX 切换显示 */
 .slide-track {
   display: flex;
   height: 100%;
   transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
+/* 单张图片容器，占满 100% 视口宽度 */
 .slide-item {
   min-width: 100%;
   height: 100%;
@@ -41,9 +81,10 @@ body { overflow: hidden; background: #000; width: 100vw; height: 100vh; }
   -webkit-user-drag: none;
 }
 
+/* ---- 图片信息（左上角） ---- */
 .image-info {
   position: fixed;
-  top: 20px;
+  top: 60px;
   left: 20px;
   color: #fff;
   font-size: 15px;
@@ -54,6 +95,7 @@ body { overflow: hidden; background: #000; width: 100vw; height: 100vh; }
   z-index: 10;
 }
 
+/* ---- 底部缩略图条带 ---- */
 .thumbnail-strip {
   position: fixed;
   bottom: 24px;
@@ -79,6 +121,7 @@ body { overflow: hidden; background: #000; width: 100vw; height: 100vh; }
   border: 2px solid transparent;
 }
 
+/* 当前图片的缩略图高亮 */
 .thumbnail-item.active {
   opacity: 1;
   border-color: #fff;
@@ -91,6 +134,9 @@ body { overflow: hidden; background: #000; width: 100vw; height: 100vh; }
   pointer-events: none;
 }
 
+/* =============================================
+   摄像头画中画（右下角）
+   ============================================= */
 .camera-overlay {
   position: fixed;
   bottom: 20px;
@@ -104,6 +150,7 @@ body { overflow: hidden; background: #000; width: 100vw; height: 100vh; }
 
 .camera-overlay canvas { display: block; }
 
+/* 手势名称标签（绿色，叠加在画中画顶部） */
 .gesture-label {
   position: absolute;
   top: 8px;
@@ -117,4 +164,152 @@ body { overflow: hidden; background: #000; width: 100vw; height: 100vh; }
   border-radius: 10px;
   font-family: system-ui, sans-serif;
   white-space: nowrap;
+}
+
+/* =============================================
+   指尖光晕页面
+   ============================================= */
+.light-page {
+  width: 100vw;
+  height: 100vh;
+  background: #08080c;          /* 深色背景，突出光晕 */
+  overflow: hidden;
+  position: relative;
+  padding-top: 42px;
+}
+
+/* 无手检测时的提示文字 */
+.light-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(255,255,255,0.25);
+  font-size: 18px;
+  font-family: system-ui, sans-serif;
+  pointer-events: none;
+}
+
+/* ---- 三层光晕（position: fixed + transform GPU 加速） ---- */
+/* 外圈大范围辉光 */
+.glow-halo {
+  position: fixed;
+  top: 0; left: 0;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(100,180,255,0.06) 0%, transparent 70%);
+  pointer-events: none;
+  will-change: transform;
+  z-index: 1;
+}
+
+/* 中间光晕层 */
+.glow-mid {
+  position: fixed;
+  top: 0; left: 0;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(100,200,255,0.2) 0%, transparent 65%);
+  pointer-events: none;
+  will-change: transform;
+  z-index: 2;
+}
+
+/* 核心亮心（最亮，带阴影发光） */
+.glow-core {
+  position: fixed;
+  top: 0; left: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(180,230,255,0.8) 35%, transparent 70%);
+  pointer-events: none;
+  will-change: transform;
+  z-index: 3;
+  box-shadow: 0 0 60px rgba(100,200,255,0.3);
+}
+
+/* ---- 空中点击按钮 ---- */
+.air-btn-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+}
+
+.air-btn {
+  padding: 16px 52px;
+  font-size: 20px;
+  font-family: system-ui, sans-serif;
+  border: 2px solid rgba(100,200,255,0.25);
+  background: rgba(100,200,255,0.06);
+  color: rgba(255,255,255,0.5);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.25s;
+  backdrop-filter: blur(4px);
+  outline: none;
+}
+
+/* 悬停/指尖悬浮时高亮 */
+.air-btn:hover,
+.air-btn.hover {
+  border-color: rgba(100,200,255,0.8);
+  background: rgba(100,200,255,0.15);
+  color: #fff;
+  box-shadow: 0 0 40px rgba(100,200,255,0.2);
+}
+
+/* ---- 成功弹窗 ---- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal-box {
+  background: #16161e;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 18px;
+  padding: 44px 64px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+}
+
+.modal-icon {
+  font-size: 52px;
+  color: #4ade80;       /* 绿色勾 */
+  margin-bottom: 14px;
+  line-height: 1;
+}
+
+.modal-text {
+  font-size: 20px;
+  color: #fff;
+  font-family: system-ui, sans-serif;
+  margin-bottom: 28px;
+}
+
+.modal-close {
+  padding: 8px 36px;
+  font-size: 14px;
+  font-family: system-ui, sans-serif;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: transparent;
+  color: rgba(255,255,255,0.5);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
 }

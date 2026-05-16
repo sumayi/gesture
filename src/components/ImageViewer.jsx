@@ -1,9 +1,13 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
-export default function ImageViewer({ currentIndex, zoom, images }) {
+export default function ImageViewer({ currentIndex, zoom, images, onSelectIndex }) {
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const isPanning = useRef(false);
   const lastPos = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    setPan({ x: 0, y: 0 });
+  }, [currentIndex]);
 
   const handleMouseDown = (e) => {
     if (zoom <= 1) return;
@@ -29,15 +33,40 @@ export default function ImageViewer({ currentIndex, zoom, images }) {
       onMouseUp={stopPan}
       onMouseLeave={stopPan}
     >
-      <img
-        src={`/img/${images[currentIndex]}`}
-        alt={`图片 ${currentIndex + 1}`}
-        style={{
-          transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)`,
-        }}
-      />
+      <div className="slide-viewport">
+        <div
+          className="slide-track"
+          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+        >
+          {images.map((src, i) => (
+            <div key={i} className="slide-item">
+              <img
+                src={`/img/${src}`}
+                alt={`图片 ${i + 1}`}
+                draggable={false}
+                style={{
+                  transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)`,
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="image-info">
         {currentIndex + 1}/{images.length} · {Math.round(zoom * 100)}%
+      </div>
+
+      <div className="thumbnail-strip">
+        {images.map((src, i) => (
+          <div
+            key={i}
+            className={`thumbnail-item ${i === currentIndex ? 'active' : ''}`}
+            onClick={() => onSelectIndex?.(i)}
+          >
+            <img src={`/img/${src}`} alt={`缩略 ${i + 1}`} />
+          </div>
+        ))}
       </div>
     </div>
   );

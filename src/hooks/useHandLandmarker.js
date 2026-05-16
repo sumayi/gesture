@@ -4,12 +4,13 @@ export function useHandLandmarker({ onGesture }) {
   const videoRef = useRef(null);
   const [landmarks, setLandmarks] = useState(null);
   const [gestureName, setGestureName] = useState('');
+  const [pinchRatio, setPinchRatio] = useState(null);
   const landmarkerRef = useRef(null);
   const lastGestureKeyRef = useRef('');
-  const lastSpokenRef = useRef('');
   const streamRef = useRef(null);
   const absentFramesRef = useRef(0);
   const ABSENT_THRESHOLD = 10;
+  const smoothedPinchRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -42,6 +43,16 @@ export function useHandLandmarker({ onGesture }) {
       }
     }
 
+    function dist(a, b) {
+      return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
+    }
+
+    function calcPinchRatio(landmarks) {
+      const d = dist(landmarks[4], landmarks[8]);
+      const handSize = dist(landmarks[0], landmarks[9]);
+      return handSize > 0.001 ? d / handSize : 0;
+    }
+
     function classifyGesture(landmarks) {
       if (landmarks.length !== 21) return null;
       const isOpen = (tip, pip) => landmarks[tip].y < landmarks[pip].y;
@@ -55,24 +66,7 @@ export function useHandLandmarker({ onGesture }) {
         return { name: '比耶', direction };
       }
 
-      if (extended === 4 && fingers.every(Boolean)) {
-        return { name: '张开手' };
-      }
-
-      if (extended === 0) {
-        return { name: '握拳' };
-      }
-
       return null;
-    }
-
-    function speak(text) {
-      if (text && text !== lastSpokenRef.current) {
-        const msg = new SpeechSynthesisUtterance(text);
-        msg.lang = 'zh-CN';
-        speechSynthesis.speak(msg);
-        lastSpokenRef.current = text;
-      }
     }
 
     async function loop() {
@@ -90,16 +84,24 @@ export function useHandLandmarker({ onGesture }) {
         setLandmarks(lm);
 
         const g = classifyGesture(lm);
+
         if (g) {
           absentFramesRef.current = 0;
           newGestureName = g.name + (g.direction ? `(${g.direction})` : '');
           const gestureKey = `${g.name}_${g.direction || ''}`;
           if (gestureKey !== lastGestureKeyRef.current) {
             lastGestureKeyRef.current = gestureKey;
-            speak(g.name);
             onGesture?.(g);
           }
         } else {
+          const raw = calcPinchRatio(lm);
+          if (smoothedPinchRef.current === null) {
+            smoothedPinchRef.current = raw;
+          } else {
+            smoothedPinchRef.current = smoothedPinchRef.current * 0.85 + raw * 0.15;
+          }
+          setPinchRatio(smoothedPinchRef.current);
+
           absentFramesRef.current++;
           if (absentFramesRef.current >= ABSENT_THRESHOLD) {
             lastGestureKeyRef.current = '';
@@ -107,6 +109,8 @@ export function useHandLandmarker({ onGesture }) {
         }
       } else {
         setLandmarks(null);
+        smoothedPinchRef.current = null;
+        setPinchRatio(null);
         absentFramesRef.current++;
         if (absentFramesRef.current >= ABSENT_THRESHOLD) {
           lastGestureKeyRef.current = '';
@@ -125,5 +129,5 @@ export function useHandLandmarker({ onGesture }) {
     };
   }, []);
 
-  return { videoRef, landmarks, gestureName };
+  return { videoRef, landmarks, gestureName, pinchRatio };
 }

@@ -1,0 +1,67 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { overflow: hidden; background: #000; width: 100vw; height: 100vh; }
+
+.app { width: 100vw; height: 100vh; position: relative; }
+
+.hidden-video { display: none; }
+
+.image-viewer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.image-viewer img {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  transition: transform 0.2s ease;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.image-info {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: 15px;
+  background: rgba(0,0,0,0.6);
+  padding: 6px 18px;
+  border-radius: 20px;
+  font-family: system-ui, sans-serif;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.camera-overlay {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid rgba(255,255,255,0.3);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  z-index: 20;
+}
+
+.camera-overlay canvas { display: block; }
+
+.gesture-label {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #0f0;
+  font-size: 14px;
+  font-weight: bold;
+  background: rgba(0,0,0,0.7);
+  padding: 2px 12px;
+  border-radius: 10px;
+  font-family: system-ui, sans-serif;
+  white-space: nowrap;
+}

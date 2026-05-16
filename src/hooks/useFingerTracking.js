@@ -4,29 +4,24 @@
  * 功能：
  *   1. 初始化摄像头 + HandLandmarker
  *   2. 每帧追踪食指 PIP 关节 (lm[6]) 的归一化坐标作为光晕位置
- *   3. 检测食指伸直→弯曲的过渡，触发空中点击 (onAirClick)
+ *   3. 检测食指 8→7→6→5 竖立姿态下的点击（6 ≈ 7 同水平）
  *
- * 为什么用 lm[6]（PIP 关节）而非 lm[8]（指尖）：
- *   弯曲食指时，指尖 (lm[8]) 会大幅下移，导致光晕跳动。
- *   PIP 关节 (lm[6]) 在弯曲时位置基本不变，光晕更稳定。
- *   点击判定仍使用 lm[8] vs lm[6] 的 y 轴相对位置。
- *
- * 与 useHandLandmarker 的区别：
- *   - 更轻量：不分类手势、不计算捏合比例
- *   - fingerPos 使用 ref 而非 state，避免频繁渲染
- *   - 仅关注食指状态
- *
- * 指人姿态（pointing pose）校验：
- *   仅当食指伸直 + 中/无名/小指卷曲时才激活追踪和点击检测，
- *   避免张手（五指全伸）被误识别为食指。
+ * 追踪门禁：
+ *   食指竖立姿态：lm[8].y < lm[7].y < lm[6].y < lm[5].y
+ *   即指尖在最上方，关节依次向下排列。
+ *   不满足时隐藏光晕、重置状态机。
  *
  * 空中点击判定：
- *   食指伸直 → 弯曲的过渡视为一次"点击"
- *   lm[8].y < lm[6].y → 伸直（指尖高于指节）
- *   lm[8].y >= lm[6].y → 弯曲
+ *   竖立姿态下，lm[6].y 与 lm[7].y 接近到阈值内 → 视为弯曲 → 触发点击。
+ *   点击后必须回到竖立姿态才能再次触发。
+ *
+ * 阈值配置：
+ *   CLICK_THRESHOLD = 0.025（归一化坐标），可根据手感调整。
  */
 
 import { useRef, useState, useEffect } from 'react';
+
+const CLICK_THRESHOLD = 0.05;
 
 export function useFingerTracking({ onAirClick } = {}) {
   const videoRef = useRef(null);
@@ -86,29 +81,20 @@ export function useFingerTracking({ onAirClick } = {}) {
         const lm = result.landmarks[0];
         setLandmarks(lm);
 
-        // 检查"食指指人"姿态：仅食指伸直，其余手指卷曲
-        // 食指伸直: lm[8].y < lm[6].y（指尖高于 PIP 关节）
-        // 中指卷曲: lm[12].y > lm[10].y（指尖低于 PIP 关节）
-        // 无名指卷曲: lm[16].y > lm[14].y
-        // 小指卷曲: lm[20].y > lm[18].y
-        const indexStraight = lm[8].y < lm[6].y;
-        const middleCurled = lm[12].y > lm[10].y;
-        const ringCurled = lm[16].y > lm[14].y;
-        const pinkyCurled = lm[20].y > lm[18].y;
-        const pointing = indexStraight && middleCurled && ringCurled && pinkyCurled;
+        // 检查食指竖立姿态：8(指尖) → 7 → 6(PIP) → 5(MCP)，y 依次递增
+        const erected = lm[8].y < lm[7].y && lm[7].y < lm[6].y && lm[6].y < lm[5].y;
 
-        if (pointing) {
-          // 使用 PIP 关节 (lm[6]) 作为光晕位置，弯曲时比指尖更稳定
+        if (erected) {
           fingerPosRef.current = { x: lm[6].x, y: lm[6].y };
 
-          // 检测伸直→弯曲的过渡 → 触发空中点击
-          const state = lm[8].y < lm[6].y ? 'straight' : 'bent';
+          // lm[6] 与 lm[7] 同水平 → 弯曲 → 触发点击
+          const level = Math.abs(lm[6].y - lm[7].y) < CLICK_THRESHOLD;
+          const state = level ? 'bent' : 'straight';
           if (fingerStateRef.current === 'straight' && state === 'bent') {
             onAirClickRef.current?.();
           }
           fingerStateRef.current = state;
         } else {
-          // 非指人姿态：隐藏光晕，重置状态机
           fingerPosRef.current = null;
           fingerStateRef.current = '';
         }

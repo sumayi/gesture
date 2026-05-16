@@ -191,6 +191,7 @@ body { overflow: hidden; background: #000; width: 100vw; height: 100vh; }
 }
 
 /* ---- 三层光晕（position: fixed + transform GPU 加速） ---- */
+/* z-index > 50 确保光晕在弹窗遮罩之上 */
 /* 外圈大范围辉光 */
 .glow-halo {
   position: fixed;
@@ -201,7 +202,7 @@ body { overflow: hidden; background: #000; width: 100vw; height: 100vh; }
   background: radial-gradient(circle, rgba(100,180,255,0.06) 0%, transparent 70%);
   pointer-events: none;
   will-change: transform;
-  z-index: 1;
+  z-index: 60;
 }
 
 /* 中间光晕层 */
@@ -214,7 +215,7 @@ body { overflow: hidden; background: #000; width: 100vw; height: 100vh; }
   background: radial-gradient(circle, rgba(100,200,255,0.2) 0%, transparent 65%);
   pointer-events: none;
   will-change: transform;
-  z-index: 2;
+  z-index: 61;
 }
 
 /* 核心亮心（最亮，带阴影发光） */
@@ -227,7 +228,7 @@ body { overflow: hidden; background: #000; width: 100vw; height: 100vh; }
   background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(180,230,255,0.8) 35%, transparent 70%);
   pointer-events: none;
   will-change: transform;
-  z-index: 3;
+  z-index: 62;
   box-shadow: 0 0 60px rgba(100,200,255,0.3);
 }
 
@@ -294,22 +295,4 @@ body { overflow: hidden; background: #000; width: 100vw; height: 100vh; }
   font-size: 20px;
   color: #fff;
   font-family: system-ui, sans-serif;
-  margin-bottom: 28px;
-}
-
-.modal-close {
-  padding: 8px 36px;
-  font-size: 14px;
-  font-family: system-ui, sans-serif;
-  border: 1px solid rgba(255,255,255,0.2);
-  background: transparent;
-  color: rgba(255,255,255,0.5);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.modal-close:hover {
-  background: rgba(255,255,255,0.1);
-  color: #fff;
 }

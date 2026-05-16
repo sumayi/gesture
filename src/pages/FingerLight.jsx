@@ -19,23 +19,41 @@ import CameraOverlay from '../components/CameraOverlay';
 export default function FingerLight() {
   const [showModal, setShowModal] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
+  const showModalRef = useRef(false);
   const btnRef = useRef(null);
+  const modalRef = useRef(null);
   const coreRef = useRef(null);
   const midRef = useRef(null);
   const haloRef = useRef(null);
   const lastHoverRef = useRef(false);
   const lastHandRef = useRef(false);
 
-  /** 空中点击回调：校验指尖是否落在按钮范围内 */
+  // 同步 showModal 到 ref，供 RAF/回调读取
+  const setShowModalWrap = (v) => { showModalRef.current = v; setShowModal(v); };
+
+  /** 空中点击回调：
+   *  弹窗关闭时 → 点击按钮开启弹窗
+   *  弹窗开启时 → 点击遮罩区域关闭弹窗 */
   const handleAirClick = useCallback(() => {
-    if (!btnRef.current) return;
     const pos = fingerPosRef.current;
     if (!pos) return;
-    const rect = btnRef.current.getBoundingClientRect();
     const sx = pos.x * window.innerWidth;
     const sy = pos.y * window.innerHeight;
-    if (sx >= rect.left && sx <= rect.right && sy >= rect.top && sy <= rect.bottom) {
-      setShowModal(true);
+
+    if (showModalRef.current) {
+      // 弹窗已开启：点击遮罩 → 关闭
+      if (!modalRef.current) return;
+      const r = modalRef.current.getBoundingClientRect();
+      if (sx >= r.left && sx <= r.right && sy >= r.top && sy <= r.bottom) {
+        setShowModalWrap(false);
+      }
+    } else {
+      // 弹窗关闭：点击按钮 → 开启
+      if (!btnRef.current) return;
+      const r = btnRef.current.getBoundingClientRect();
+      if (sx >= r.left && sx <= r.right && sy >= r.top && sy <= r.bottom) {
+        setShowModalWrap(true);
+      }
     }
   }, []);
 
@@ -63,9 +81,10 @@ export default function FingerLight() {
         if (midRef.current) midRef.current.style.transform = `translate(${t}`;
         if (haloRef.current) haloRef.current.style.transform = `translate(${t}`;
 
-        // 检测指尖是否悬浮在按钮区域 → 更新悬停状态
-        if (btnRef.current) {
-          const r = btnRef.current.getBoundingClientRect();
+        // 检测指尖悬浮状态：弹窗开启时检测遮罩，关闭时检测按钮
+        const target = showModalRef.current ? modalRef.current : btnRef.current;
+        if (target) {
+          const r = target.getBoundingClientRect();
           const over = sx >= r.left && sx <= r.right && sy >= r.top && sy <= r.bottom;
           if (over !== lastHoverRef.current) {
             lastHoverRef.current = over;
@@ -100,15 +119,12 @@ export default function FingerLight() {
         </button>}
       </div>
 
-      {/* 成功弹窗 */}
+      {/* 成功弹窗（无关闭按钮，通过指尖点击遮罩关闭） */}
       {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+        <div ref={modalRef} className="modal-overlay" onClick={() => setShowModalWrap(false)}>
           <div className="modal-box" onClick={e => e.stopPropagation()}>
             <div className="modal-icon">✓</div>
             <div className="modal-text">操作成功！</div>
-            <button className="modal-close" onClick={() => setShowModal(false)}>
-              关闭
-            </button>
           </div>
         </div>
       )}

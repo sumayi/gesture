@@ -1,7 +1,7 @@
 # 手势控制图片浏览 + 指尖光晕
 
 基于 MediaPipe HandLandmarker 的实时手势识别应用，包含两个功能页面：手势控制图片浏览（翻页 + 连续捏合缩放）和指尖追踪光晕效果（空中点击）。
-
+参考 https://ai.google.dev/edge/mediapipe/solutions/vision/gesture_recognizer?hl=zh-cn
 ---
 
 ## 项目结构

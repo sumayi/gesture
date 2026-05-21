@@ -232,13 +232,20 @@ body { overflow: hidden; background: #000; width: 100vw; height: 100vh; }
   box-shadow: 0 0 60px rgba(100,200,255,0.3);
 }
 
-/* ---- 空中点击按钮 ---- */
+/* ---- 驻留点击按钮 ---- */
 .air-btn-container {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 5;
+}
+
+.btn-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
 .air-btn {
@@ -255,13 +262,29 @@ body { overflow: hidden; background: #000; width: 100vw; height: 100vh; }
   outline: none;
 }
 
-/* 悬停/指尖悬浮时高亮 */
 .air-btn:hover,
 .air-btn.hover {
   border-color: rgba(100,200,255,0.8);
   background: rgba(100,200,255,0.15);
   color: #fff;
   box-shadow: 0 0 40px rgba(100,200,255,0.2);
+}
+
+/* 驻留进度条（悬浮时 3s 逐步填满） */
+.dwell-bar-track {
+  width: 100%;
+  height: 3px;
+  background: rgba(100,200,255,0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.dwell-bar-fill {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(100,200,255,0.4), rgba(100,200,255,0.9));
+  border-radius: 2px;
+  transition: none;  /* RAF 直接操作 width，不需要 CSS 过渡 */
 }
 
 /* ---- 成功弹窗 ---- */
@@ -273,6 +296,12 @@ body { overflow: hidden; background: #000; width: 100vw; height: 100vh; }
   align-items: center;
   justify-content: center;
   z-index: 50;
+  transition: background 0.25s;
+}
+
+/* 指尖悬浮在遮罩上时提示可关闭 */
+.modal-overlay.hover {
+  background: rgba(0,0,0,0.45);
 }
 
 .modal-box {
